@@ -6,6 +6,8 @@ namespace SCANsat
 	public class SCANmap
 	{
 		private static Color[] heightGradient = {
+			XKCDColors.DarkPurple,
+			XKCDColors.Cerulean,
 			XKCDColors.ArmyGreen,
 			XKCDColors.Yellow,
 			XKCDColors.Red,
@@ -13,31 +15,41 @@ namespace SCANsat
 			XKCDColors.White,
 			XKCDColors.White
 		};
+		public static float startGradientHeight = -1500;// default range is from -1500 to 9000
+		public static float heightGradientRange = 10500;// default of 10500
 
 		public static Color heightToColor(float val, int scheme) {
 			if(scheme == 1 || SCANcontroller.controller.colours == 1) {
-				return Color.Lerp(Color.black, Color.white, Mathf.Clamp((val + 1500f) / 9000f, 0, 1));
+				return Color.Lerp(Color.black, Color.white, Mathf.Clamp((val - startGradientHeight) / heightGradientRange, 0, 1));
 			}
 			Color c = Color.black;
-			if(val <= 0) {
-				val = (Mathf.Clamp(val, -1500, 0) + 1500) / 1000f;
-				c = Color.Lerp(XKCDColors.DarkPurple, XKCDColors.Cerulean, val);
-			} else {
-				val = (heightGradient.Length - 2) * Mathf.Clamp(val, 0, 7500) / 7500.0f;
-				c = Color.Lerp(heightGradient[(int)val], heightGradient[(int)val + 1], val - (int)val);
+			val -= startGradientHeight;
+			val /= heightGradientRange;
+			if (val<0f) {//below gradient range
+				c=heightGradient[0];
 			}
+			else if (val>1f) {//above gradient range
+				c=heightGradient[heightGradient.Length-1];
+			}
+			else {//in gradient range
+				val *= (heightGradient.Length-2);
+				c = Color.Lerp(heightGradient[(int)val], heightGradient[(int)val + 1], val - (int)val);
+			}	
 			return c;
 		}
 
 		public static Texture2D legend;
-		private static float legendMin, legendMax;
+		private static float legendMin, legendMax, legendstartGradientHeight, legendheightGradientRange;
 		private static int legendScheme;
 		public static Texture2D getLegend(float min, float max, int scheme) {
-			if(legend != null && legendMin == min && legendMax == max && legendScheme == scheme) return legend;
-			legend = new Texture2D(256, 1, TextureFormat.RGB24, false);
+			if( legend != null && legendMin == min && legendMax == max && legendScheme == scheme &&
+				legendstartGradientHeight == startGradientHeight && legendheightGradientRange == heightGradientRange ) return legend;
+			legend = new Texture2D(legend_width, 1, TextureFormat.RGB24, false);
 			legendMin = min;
 			legendMax = max;
 			legendScheme = scheme;
+			legendstartGradientHeight = startGradientHeight;
+			legendheightGradientRange = heightGradientRange;
 			Color[] pix = legend.GetPixels();
 			for(int x=0; x<256; ++x) {
 				float val = (x * (max - min)) / 256f + min;
