@@ -44,7 +44,7 @@ namespace SCANsat
 		public static Texture2D getLegend(float min, float max, int scheme) {
 			if( legend != null && legendMin == min && legendMax == max && legendScheme == scheme &&
 				legendstartGradientHeight == startGradientHeight && legendheightGradientRange == heightGradientRange ) return legend;
-			legend = new Texture2D(legend_width, 1, TextureFormat.RGB24, false);
+			legend = new Texture2D(256, 1, TextureFormat.RGB24, false);
 			legendMin = min;
 			legendMax = max;
 			legendScheme = scheme;
