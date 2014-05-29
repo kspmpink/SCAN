@@ -975,7 +975,7 @@ namespace SCANsat
 			drawLabel(lr, Color.white, txt, false, true);
 		}
 
-		private static void drawLegend() {
+		private static Rect drawLegend() {
 			if(bigmap.mapmode == 0 && SCANcontroller.controller.legend) {
 				GUILayout.Label("", GUILayout.ExpandWidth(true));
 				Rect r = GUILayoutUtility.GetLastRect();
@@ -984,7 +984,8 @@ namespace SCANsat
 				for(float val=-1000f; val < 9000f; val += 1000f) {
 					drawLegendLabel(r, val, -1500f, 9000f);
 				}
-			}
+				return r;
+			}return new Rect(0,0,0,0);
 		}
 
 		private static void gui_bigmap_build(int wid) {
@@ -1209,16 +1210,26 @@ namespace SCANsat
 					info += " " + mlat.ToString("F") + " " + mlon.ToString("F"); // uncomment for debugging projections
 				}
 			}
+			
+			Rect legend_rect;
 			if(maprect.width < 720) {
 				GUILayout.EndHorizontal();
 				readableLabel(info, Color.white);
-				drawLegend();
+				legend_rect = drawLegend();
 			} else {
 				GUILayout.BeginVertical();
 				readableLabel(info, Color.white);
-				drawLegend();
+				legend_rect = drawLegend();
 				GUILayout.EndVertical();
 				GUILayout.EndHorizontal();
+			}
+			bool in_gradient_legend = false;
+			float gradient_height = -1;
+			if(legend_rect.width>0f) {
+				float mgx = (Event.current.mousePosition.x - legend_rect.x) / legend_rect.width;
+				float mgy = (Event.current.mousePosition.y - legend_rect.y) / legend_rect.height;
+				in_gradient_legend = (mgx>=0f) && (mgx<=1f) && (mgy>=0f) && (mgy<=1f);
+				gradient_height = -1500f+(mgx*10500f);
 			}
 
 			if(!notMappingToday) drawMapLabels(maprect, vessel, bigmap, data);
@@ -1270,12 +1281,24 @@ namespace SCANsat
 								pos_spotmap.y = Math.Max(maprect.y, Math.Min(maprect.y + maprect.height - pos_spotmap.height, pos_spotmap.y));
 							}
 						}
+						if (in_gradient_legend)
+						{
+							SCANmap.heightGradientRange = gradient_height-SCANmap.startGradientHeight;
+							bigmap.resetMap();
+							if(spotmap != null) spotmap.resetMap();
+						}
 					} else if(Event.current.button == 0) {
 						if(spotmap != null && in_spotmap) {
 							spotmap.mapscale = spotmap.mapscale / 1.25f;
 							if(spotmap.mapscale < 10) spotmap.mapscale = 10;
 							spotmap.resetMap(spotmap.mapmode);
 							Event.current.Use();
+						}
+						if (in_gradient_legend)
+						{
+							SCANmap.startGradientHeight = gradient_height;
+							bigmap.resetMap();
+							if(spotmap != null) spotmap.resetMap();
 						}
 					}
 					Event.current.Use();
