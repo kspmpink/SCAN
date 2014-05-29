@@ -1296,7 +1296,9 @@ namespace SCANsat
 						}
 						if (in_gradient_legend)
 						{
+							float end_pos = SCANmap.startGradientHeight+SCANmap.heightGradientRange;
 							SCANmap.startGradientHeight = gradient_height;
+							SCANmap.heightGradientRange = end_pos-SCANmap.startGradientHeight;
 							bigmap.resetMap();
 							if(spotmap != null) spotmap.resetMap();
 						}
