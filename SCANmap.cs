@@ -6,17 +6,15 @@ namespace SCANsat
 	public class SCANmap
 	{
 		private static Color[] heightGradient = {
-			XKCDColors.DarkPurple,
-			XKCDColors.Cerulean,
 			XKCDColors.ArmyGreen,
 			XKCDColors.Yellow,
 			XKCDColors.Red,
 			XKCDColors.Magenta,
-			XKCDColors.White,
 			XKCDColors.White
 		};
 		public static float startGradientHeight = -1500;// default range is from -1500 to 9000
 		public static float heightGradientRange = 10500;// default of 10500
+		private const float gradientSealevelPercent = 1500f/10500f;//indetifys the point to start using heightGradient for lerps
 
 		public static Color heightToColor(float val, int scheme) {
 			if(scheme == 1 || SCANcontroller.controller.colours == 1) {
@@ -26,14 +24,20 @@ namespace SCANsat
 			val -= startGradientHeight;
 			val /= heightGradientRange;
 			if (val<0f) {//below gradient range
-				c=heightGradient[0];
+				c=XKCDColors.DarkPurple;
 			}
-			else if (val>1f) {//above gradient range
+			else if (val>=1f) {//above gradient range
 				c=heightGradient[heightGradient.Length-1];
 			}
 			else {//in gradient range
-				val *= (heightGradient.Length-2);
-				c = Color.Lerp(heightGradient[(int)val], heightGradient[(int)val + 1], val - (int)val);
+				if (val<=gradientSealevelPercent) {
+					c = Color.Lerp(XKCDColors.DarkPurple, XKCDColors.Cerulean, val/gradientSealevelPercent );
+				} else {
+					val -= gradientSealevelPercent;//remove sealevel chunk
+					val /= (1f-gradientSealevelPercent);//realign the range from 0 to 1
+					val *= (heightGradient.Length-1);
+					c = Color.Lerp(heightGradient[(int)val], heightGradient[(int)val + 1], val - (int)val);
+				}
 			}	
 			return c;
 		}
